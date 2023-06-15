@@ -1,34 +1,74 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useState, useEffect } from "react";
+import { Header } from "./components/header/Header";
+import { Buscador } from "./components/buscador/Buscador";
+import { BotonProductos } from "./components/botonProductos/BotonProductos";
+import { TarjetasContenedor } from "./components/tarjetas/TarjetasContenedor";
+import { AgregarProductos } from "./components/mostrarProductos/AgregarProductos";
+
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [articulos, setArticulos] = useState([]);
+  const [valorBuscado, setValorBuscado] = useState("");
+  const [productosAñadidos, setProductosAñadidos] = useState([]);
+  const [mostrarProductosAñadidos, setMostrarProductosAñadidos] = useState(false);
+
+  useEffect(() => {
+    fetch('https://fakestoreapi.com/products/')
+            .then(res=>res.json())
+            .then(data=>setArticulos(data))
+  }, [])
+  
+  const filtroProductos = articulos.filter((articulo) =>
+    articulo.title.toLowerCase().includes(valorBuscado.toLowerCase())
+  );
+
+  function cambiarDatosBusqueda(e) {
+    setValorBuscado(e.target.value);
+  }
+
+  function añadirProducto(articulo) {
+    articulo.addNumber = 1;
+    const arregloArticulo = productosAñadidos;
+    setProductosAñadidos([...arregloArticulo, articulo]);
+    console.log(productosAñadidos);
+  }
+
+  function eliminarProducto(articulo) {
+    const nuevosArticulos = productosAñadidos.filter((añadirProducto) => añadirProducto.id !== articulo.id);
+    setProductosAñadidos(nuevosArticulos);
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="main-container">
+        <div className="nav-container">
+          <Header />
+          <div className="nav-right">
+            <Buscador 
+              productos={articulos}
+              value={valorBuscado}
+              onChangeData={cambiarDatosBusqueda}
+            />
+            <div className="boton-container">
+              <BotonProductos numero={productosAñadidos.length} click={setMostrarProductosAñadidos} />
+            </div>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+      {mostrarProductosAñadidos && (
+        <AgregarProductos 
+          productos={productosAñadidos}
+          click={setMostrarProductosAñadidos}
+          eliminarProducto={eliminarProducto}
+          setProductoAñadido={setProductosAñadidos}
+        />
+      )}
+      <TarjetasContenedor 
+        productos={filtroProductos}
+        añadirProducto={añadirProducto}
+        eliminarProducto={eliminarProducto}
+        productosAñadidos={productosAñadidos}
+      />
+    </div>
   )
 }
 
